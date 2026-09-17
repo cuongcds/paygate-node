@@ -14,8 +14,8 @@ export interface CreateCheckoutSessionParams {
   external_ref?: string;
   interval?: string;
   interval_count?: number;
+  /** "stripe" or "payos" only — never "test" (see createCheckoutSession docs). */
   payment_method?: string;
-  test_card_code?: string;
   [key: string]: unknown;
 }
 
@@ -65,9 +65,12 @@ export class Client {
   /**
    * POST /api/v1/checkout-sessions — see documents/03.01-checkout-sessions.md.
    *
-   * payment_method/test_card_code are optional — omit them for the normal
-   * flow. Returns the `data` object (e.g. `{ checkout_url }`, or
-   * `{ status, subscription }` for payment_method="test").
+   * `payment_method` is optional and, when sent, must be `"stripe"` or
+   * `"payos"` — omit it entirely for the normal flow. This endpoint never
+   * accepts `"test"` or a `test_card_code`, and never resolves a payment
+   * result: it always returns just `{ checkout_url }`. To exercise the Test
+   * Payment Method, open the returned `checkout_url` (PayGate's hosted
+   * picker page) and choose it there — see documents/03.04-testing.md.
    */
   async createCheckoutSession(
     params: CreateCheckoutSessionParams

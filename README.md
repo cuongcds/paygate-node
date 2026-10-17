@@ -111,6 +111,8 @@ const plan = await client.createPlan({
     },
     { name: 'Half-year', amount: 1090000, currency: 'VND', interval_unit: 'month', interval_count: 6 },
     { name: 'Yearly', amount: 1990000, currency: 'VND', interval_unit: 'year', interval_count: 1 },
+    // One payment, never expires: no interval_count, no trial.
+    { name: 'Lifetime', amount: 4990000, currency: 'VND', interval_unit: 'lifetime' },
   ],
 });
 
@@ -122,6 +124,8 @@ await client.updatePlanPrice(plan.id, plan.prices[0].id, { status: 'archived' })
 ```
 
 ## Subscription checkout with a price
+
+A `lifetime` price activates a subscription whose `current_period_end` is `null` (it never expires, no reminders). A user who already owns one gets `PayGateError` with `errorCode === 'already_lifetime'` (HTTP 409) on a new checkout. A disabled app gets `errorCode === 'app_disabled'` (HTTP 403).
 
 For `mode: 'subscription'`, send `price_id` + `customer_id` (optionally `skip_trial`, `payment_method`, `success_url`, `cancel_url`, `external_ref`). Amount, currency and interval come from the price — do **not** send `plan_ref`, `amount`, `currency`, `interval`, `interval_count` or `plan_id`. The response is `{ checkout_url, activated, trial }`.
 

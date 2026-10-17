@@ -62,6 +62,7 @@ function assertSigned(method: string, pathWithoutQuery: string, rawBody: string)
 
 describe('Client new endpoints', () => {
   const price = { amount: 199000, currency: 'VND', interval_unit: 'month' as const, interval_count: 1 };
+  const lifetimePrice = { amount: 4990000, currency: 'VND', interval_unit: 'lifetime' as const };
 
   const cases: Array<{
     name: string;
@@ -118,6 +119,13 @@ describe('Client new endpoints', () => {
       method: 'POST',
       path: '/api/v1/plans/plan_1/prices',
       body: { ...price, trial: { amount: 0, interval_unit: 'day', interval_count: 7 } },
+    },
+    {
+      name: 'addPlanPrice (lifetime)',
+      call: (c) => c.addPlanPrice('plan_1', lifetimePrice),
+      method: 'POST',
+      path: '/api/v1/plans/plan_1/prices',
+      body: lifetimePrice,
     },
     {
       name: 'updatePlanPrice',

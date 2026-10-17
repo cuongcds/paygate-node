@@ -6,6 +6,9 @@ import { PayGateError, TransportError } from './errors';
 
 export type IntervalUnit = 'day' | 'week' | 'month' | 'year';
 
+/** A price may also be `lifetime`: one payment, the subscription never expires. */
+export type PriceIntervalUnit = IntervalUnit | 'lifetime';
+
 /** Introductory period charged before the first regular renewal. */
 export interface Trial {
   amount: number;
@@ -38,15 +41,27 @@ export interface CreateCustomerParams {
 /** Every field is optional — only the fields sent are changed. */
 export type UpdateCustomerParams = Partial<CreateCustomerParams>;
 
-/** A price as sent when creating a plan or adding a price to one. */
-export interface PriceParams {
+interface PriceParamsBase {
   name?: string;
   amount: number;
   currency: string;
+}
+
+/** A recurring price: the customer renews by paying again every period. */
+export interface RecurringPriceParams extends PriceParamsBase {
   interval_unit: IntervalUnit;
   interval_count: number;
   trial?: Trial | null;
 }
+
+/** A one-time price that never expires; no `interval_count`, no trial. */
+export interface LifetimePriceParams extends PriceParamsBase {
+  interval_unit: 'lifetime';
+  interval_count?: 1;
+}
+
+/** A price as sent when creating a plan or adding a price to one. */
+export type PriceParams = RecurringPriceParams | LifetimePriceParams;
 
 export interface Price {
   /** Public id, e.g. "price_…". */
@@ -54,7 +69,8 @@ export interface Price {
   name: string | null;
   amount: number;
   currency: string;
-  interval_unit: IntervalUnit;
+  /** `interval_count` is always 1 for `lifetime`. */
+  interval_unit: PriceIntervalUnit;
   interval_count: number;
   trial: Trial | null;
   status: 'active' | 'archived';
@@ -145,6 +161,7 @@ export interface SubscriptionState {
   price_id: string | null;
   customer_id: string | null;
   status: string;
+  /** `null` for a lifetime subscription (it never expires). */
   current_period_end: string | null;
   in_trial: boolean;
   trial_ends_at: string | null;
